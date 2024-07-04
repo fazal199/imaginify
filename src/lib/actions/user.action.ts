@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import {User} from "../database/models/user.model";
+
+import { User } from "../database/models/user.model";
 import { connectDb } from "../database/dbConfig";
 import { handleError } from "../utils";
 import { CreateUserParams, UpdateUserParams } from "../../types";
