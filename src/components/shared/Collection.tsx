@@ -12,13 +12,14 @@ import {
   PaginationPrevious,
 } from "../ui/pagination";
 import { transformationTypes } from "../../../constants/index";
-import { ImageSchema as IImage} from "./../../lib/database/models/image.model";
+import { ImageSchema as IImage } from "./../../lib/database/models/image.model";
 import { formUrlQuery } from "./../../lib/utils";
 
 import { Button } from "../ui/button";
 
 import { Search } from "./Search";
 import { TransformationTypeK } from "../../types";
+
 
 export const Collection = ({
   hasSearch = false,
@@ -31,9 +32,12 @@ export const Collection = ({
   page: number;
   hasSearch?: boolean;
 }) => {
+
+
+
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // PAGINATION HANDLER
   const onPageChange = (action: string) => {
     const pageValue = action === "next" ? Number(page) + 1 : Number(page) - 1;
@@ -114,11 +118,10 @@ const Card = ({ image }: { image: IImage }) => {
             {image.title}
           </p>
           <Image
-            src={`/assets/icons/${
-              transformationTypes[
+            src={`/assets/icons/${transformationTypes[
                 image.transformationType as TransformationTypeK
               ].icon
-            }`}
+              }`}
             alt={image.title}
             width={24}
             height={24}

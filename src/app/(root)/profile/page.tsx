@@ -12,7 +12,7 @@ import { SearchParamProps } from "../../../types";
 const ProfilePage = async ({ searchParams }: SearchParamProps) => {
   const page = Number(searchParams?.page) || 1;
   const { userId } = auth();
-
+  
   if (!userId) redirect("/sign-in");
 
   const user = await getUserById(userId);
