@@ -1,14 +1,12 @@
 /* eslint-disable camelcase */
-import { createTransaction } from "./../../../../lib/actions/transaction.action";
+import { createTransaction } from "../../../../lib/actions/transaction.action";
 import { NextResponse } from "next/server";
-import stripe from "stripe";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' });
 
 export async function POST(request: Request) {
-  const rawBody = await request.body.getReader().read();
-
-  // Option 1: Using TextDecoder
-  const decoder = new TextDecoder("utf-8"); // Adjust encoding if needed
-  const body = decoder.decode(rawBody.value);
+  const rawBody = await request.text();
 
   const sig = request.headers.get("stripe-signature") as string;
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -16,21 +14,19 @@ export async function POST(request: Request) {
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
+    event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
   } catch (err) {
     return NextResponse.json({
       message: "Webhook error",
-      error: err,
+      error: err.message,
       endpointSecret,
       sig,
-      body,
-    });
+      body: rawBody,
+    }, { status: 400 });
   }
 
-  // Get the ID and type
   const eventType = event.type;
 
-  // CREATE
   if (eventType === "checkout.session.completed") {
     const { id, amount_total, metadata } = event.data.object;
 
