@@ -1,12 +1,11 @@
 /* eslint-disable camelcase */
 import { createTransaction } from "./../../../../lib/actions/transaction.action";
 import { NextResponse } from "next/server";
-import { Stripe } from "stripe";
+import stripe from "stripe";
 
 export async function POST(request: Request) {
   const body = await request.text();
 
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
   const sig = request.headers.get("stripe-signature") as string;
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -48,9 +47,4 @@ export async function POST(request: Request) {
   return new Response("", { status: 200 });
 }
 
-export const config = {
-  api: {
-    bodyParser: false,
-    externalResolver: true,
-  },
-};
+
