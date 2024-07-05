@@ -2,24 +2,24 @@
 import { createTransaction } from "../../../../lib/actions/transaction.action";
 import { NextResponse, NextRequest } from "next/server";
 import Stripe from "stripe";
-import { Readable } from 'stream';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' });
 
-function buffer(readable: Readable) {
-  return new Promise<Buffer>((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    readable.on('data', (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
-    readable.on('end', () => resolve(Buffer.concat(chunks)));
-    readable.on('error', reject);
-  });
+async function buffer(readableStream: ReadableStream<Uint8Array>): Promise<Buffer> {
+  const reader = readableStream.getReader();
+  const chunks = [];
+  let done, value;
+  while ({ done, value } = await reader.read(), !done) {
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks);
 }
 
 export async function POST(request: NextRequest) {
   let rawBody: Buffer;
 
   try {
-    rawBody = await buffer(request.body as Readable);
+    rawBody = await buffer(request.body);
   } catch (err) {
     return NextResponse.json({
       message: "Error reading raw body",
