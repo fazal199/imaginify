@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { createTransaction } from "./../../../../lib/actions/transaction.action";
 import { NextResponse } from "next/server";
-import {Stripe} from "stripe";
+import { Stripe } from "stripe";
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -15,7 +15,11 @@ export async function POST(request: Request) {
   try {
     event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
   } catch (err) {
-    return NextResponse.json({ message: "Webhook error", error: err });
+    return NextResponse.json({
+      message: "Webhook error",
+      error: err,
+      endpointSecret,
+    });
   }
 
   // Get the ID and type
@@ -35,7 +39,7 @@ export async function POST(request: Request) {
     };
 
     const newTransaction = await createTransaction(transaction);
-    
+
     return NextResponse.json({ message: "OK", transaction: newTransaction });
   }
 
