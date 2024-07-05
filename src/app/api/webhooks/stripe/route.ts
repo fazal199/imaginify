@@ -19,6 +19,8 @@ export async function POST(request: Request) {
       message: "Webhook error",
       error: err,
       endpointSecret,
+      sig,
+      body
     });
   }
 
