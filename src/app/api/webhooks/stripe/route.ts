@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       error: err,
       endpointSecret,
       sig,
-      body
+      body,
     });
   }
 
@@ -47,3 +47,10 @@ export async function POST(request: Request) {
 
   return new Response("", { status: 200 });
 }
+
+export const config = {
+  api: {
+    bodyParser: false,
+    externalResolver: true,
+  },
+};
