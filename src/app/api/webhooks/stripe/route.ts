@@ -1,51 +1,27 @@
 /* eslint-disable camelcase */
 import { createTransaction } from "../../../../lib/actions/transaction.action";
-import { NextResponse, NextRequest } from "next/server";
-import Stripe from "stripe";
+import { NextResponse } from "next/server";
+import stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' });
 
-async function buffer(readableStream: ReadableStream<Uint8Array>): Promise<Buffer> {
-  const reader = readableStream.getReader();
-  const chunks = [];
-  let done, value;
-  while ({ done, value } = await reader.read(), !done) {
-    chunks.push(value);
-  }
-  return Buffer.concat(chunks);
-}
-
-export async function POST(request: NextRequest) {
-  let rawBody: Buffer;
-
-  try {
-    rawBody = await buffer(request.body);
-  } catch (err) {
-    return NextResponse.json({
-      message: "Error reading raw body",
-      error: (err as Error).message,
-    }, { status: 400 });
-  }
+export async function POST(request: Request) {
+  const body = await request.text();
 
   const sig = request.headers.get("stripe-signature") as string;
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
+    event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
   } catch (err) {
-    return NextResponse.json({
-      message: "Webhook error",
-      error: (err as Error).message,
-      endpointSecret,
-      sig,
-      body: rawBody.toString(), // Ensure this is logged as a string for readability
-    }, { status: 400 });
+    return NextResponse.json({ message: "Webhook error", error: err });
   }
 
+  // Get the ID and type
   const eventType = event.type;
 
+  // CREATE
   if (eventType === "checkout.session.completed") {
     const { id, amount_total, metadata } = event.data.object;
 
@@ -59,7 +35,7 @@ export async function POST(request: NextRequest) {
     };
 
     const newTransaction = await createTransaction(transaction);
-
+    
     return NextResponse.json({ message: "OK", transaction: newTransaction });
   }
 
